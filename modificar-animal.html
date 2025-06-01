@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Modificar Animal</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url('img/fondo-marca-agua.png') no-repeat center center fixed;
+      background-size: 55%;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    form {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .edad-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .edad-group input {
+      flex: 1;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #mensaje {
+      margin-top: 10px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Modificar Animal</h1>
+
+  <form id="form-animal">
+    <label>Tipo:</label>
+    <input name="tipo" required>
+
+    <label>Nombre:</label>
+    <input name="nombre" required>
+
+    <label>Raza:</label>
+    <input name="raza" required>
+
+    <label>Edad:</label>
+    <div class="edad-group">
+      <input type="number" name="edad.anios" placeholder="Años" required>
+      <input type="number" name="edad.meses" placeholder="Meses">
+      <input type="number" name="edad.dias" placeholder="Días">
+    </div>
+
+    <label>Peso (kg):</label>
+    <input type="number" name="peso" step="0.01">
+
+    <button type="submit">Guardar Cambios</button>
+  </form>
+
+  <p id="mensaje"></p>
+  <br>
+  <button onclick="window.history.back()">Regresar</button>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const clienteId = params.get('idCliente');
+    const animalId = params.get('idAnimal');
+
+    const form = document.getElementById('form-animal');
+    const mensaje = document.getElementById('mensaje');
+
+    async function cargarDatosAnimal() {
+      const res = await fetch(`/clientes/${clienteId}`);
+      const cliente = await res.json();
+
+      const animal = cliente.animales.find(a => a._id === animalId);
+      if (!animal) {
+        mensaje.textContent = "❌ Animal no encontrado.";
+        return;
+      }
+
+      form.tipo.value = animal.tipo;
+      form.nombre.value = animal.nombre;
+      form.raza.value = animal.raza;
+      form['edad.anios'].value = animal.edad?.anios || '';
+      form['edad.meses'].value = animal.edad?.meses || '';
+      form['edad.dias'].value = animal.edad?.dias || '';
+      form.peso.value = animal.peso || '';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const datos = {
+        tipo: form.tipo.value,
+        nombre: form.nombre.value,
+        raza: form.raza.value,
+        edad: {
+          anios: parseInt(form['edad.anios'].value) || 0,
+          meses: form['edad.meses'].value ? parseInt(form['edad.meses'].value) : undefined,
+          dias: form['edad.dias'].value ? parseInt(form['edad.dias'].value) : undefined
+        },
+        peso: form.peso.value ? parseFloat(form.peso.value) : undefined
+      };
+
+      const res = await fetch(`/clientes/${clienteId}/animales/${animalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      });
+
+      if (res.ok) {
+        mensaje.textContent = "✅ Animal actualizado con éxito.";
+        setTimeout(() => window.location.href = `cliente.html?id=${clienteId}`, 1500);
+      } else {
+        mensaje.textContent = "❌ Error al actualizar el animal.";
+      }
+    });
+
+    cargarDatosAnimal();
+  </script>
+
+</body>
+</html>

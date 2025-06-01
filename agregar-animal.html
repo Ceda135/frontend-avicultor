@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Agregar Animal</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)),
+        url('img/fondo-marca-agua.png') no-repeat center center fixed;
+      background-size: 55%;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+
+    form {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .edad-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .edad-group input {
+      flex: 1;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #mensaje {
+      margin-top: 10px;
+      color: green;
+    }
+
+    #boton-regresar {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Agregar Animal</h1>
+
+  <form id="form-animal">
+    <label>Tipo:</label>
+    <input name="tipo" required>
+
+    <label>Nombre:</label>
+    <input name="nombre" required>
+
+    <label>Raza:</label>
+    <input name="raza" required>
+
+    <label>Edad:</label>
+    <div class="edad-group">
+      <input type="number" name="edad.anios" placeholder="Años" required>
+      <input type="number" name="edad.meses" placeholder="Meses">
+      <input type="number" name="edad.dias" placeholder="Días">
+    </div>
+
+    <label>Peso (kg):</label>
+    <input type="number" name="peso" step="0.01">
+
+    <button type="submit">Agregar</button>
+  </form>
+
+  <p id="mensaje"></p>
+
+  <div id="boton-regresar">
+    <button onclick="window.history.back()">Regresar</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const clienteId = urlParams.get('id');
+
+    const form = document.getElementById('form-animal');
+    const mensaje = document.getElementById('mensaje');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const datos = {
+        tipo: formData.get("tipo"),
+        nombre: formData.get("nombre"),
+        raza: formData.get("raza"),
+        edad: {
+          anios: parseInt(formData.get("edad.anios")) || 0,
+          meses: formData.get("edad.meses") ? parseInt(formData.get("edad.meses")) : undefined,
+          dias: formData.get("edad.dias") ? parseInt(formData.get("edad.dias")) : undefined,
+        },
+        peso: formData.get("peso") ? parseFloat(formData.get("peso")) : undefined
+      };
+
+      const res = await fetch(`/clientes/${clienteId}/animales`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        mensaje.textContent = "✅ Animal agregado con éxito.";
+        form.reset();
+        setTimeout(() => window.location.href = `cliente.html?id=${clienteId}`, 1500);
+      } else {
+        mensaje.textContent = "❌ Error al agregar animal.";
+        console.error(result);
+      }
+    });
+  </script>
+
+</body>
+</html>
